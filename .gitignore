@@ -1,0 +1,27 @@
+# --- Python cache ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual environments ---
+venv/
+.env/
+.venv/
+
+# --- Environment files ---
+.env
+*.env
+
+# --- Local config / secrets ---
+*.ipynb
+
+# --- OS-specific ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- VSCode settings ---
+.vscode
