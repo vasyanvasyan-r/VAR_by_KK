@@ -106,8 +106,11 @@ monthly_data = cbrate_and_inflation.merge(dollar_m, how = 'inner', on = 'date')\
                 .merge(pmi, how = 'inner', on = 'date')\
                 .merge(brent_m, how = 'inner', on = 'date')\
                 .merge(roisfix_m, how = 'inner', on = 'date')\
-                .merge(zcyc_m, how = 'inner', on = 'date')
+                .merge(zcyc_m, how = 'inner', on = 'date').sort_values('date')
 
 daily_data = zcyc.merge(ruonia, how = 'inner', on = 'date')\
     .merge(roisfix, how = 'inner', on = 'date')\
-    .merge(brent, how = 'inner', on = 'date')
+    .merge(brent, how = 'inner', on = 'date').sort_values('date')
+
+monthly_data = monthly_data.set_index('date').apply(lambda x: x.astype(float)).copy()
+daily_data.iloc[:, 1:] = daily_data.iloc[:, 1:].apply(lambda x: x.astype(float)).copy()
