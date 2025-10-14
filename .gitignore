@@ -14,8 +14,11 @@ venv/
 *.env
 
 # --- Local config / secrets ---
-*.ipynb
-
+data_cleaning.ipynb
+testing.py
+chenking.ipynb
+LOS.ipynb
+data.xlsx
 # --- OS-specific ---
 .DS_Store
 Thumbs.db
