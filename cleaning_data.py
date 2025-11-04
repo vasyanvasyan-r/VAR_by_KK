@@ -158,7 +158,7 @@ class clean:
                 print("Нет такой переменной в списке переменных")
                 return None, None
         else:
-            if series: # type: ignore
+            if series is not None and not series.empty:
                 print("Для очистки от сезонности и трендов использую переданный мне временной ряд")
             else:
                 print("Проверьте, что вы передали мне хотя бы что-то одно: или название переменной или временной ряд")
@@ -231,7 +231,7 @@ class clean:
                 print("Нет такой переменной в списке переменных")
                 return None, None
         else:
-            if series is not None: # type: ignore
+            if series is not None and not series.empty:
                 print("Для очистки от сезонности и трендов использую переданный мне временной ряд")
                 series, starting_i = self.remove_na(series, from_class=False) # type: ignore
             else:

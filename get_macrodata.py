@@ -55,6 +55,15 @@ m_agg = monetary_agg.loc[[
 
 m_agg['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in m_agg['date']]
 
+
+monetary_agg = pd.read_excel(path + f'//monetary_agg_SA.xlsx', engine='openpyxl').iloc[2:-5, :].rename(columns={'Денежные агрегаты':'name'}).set_index('name').rename_axis(None, axis=0)
+m_agg_sa = monetary_agg.loc[:, [
+    'Unnamed: 27', 'Unnamed: 24', 'Unnamed: 21'
+]].set_axis(['m2x_sa_mom', 'm2_sa_mom', 'm1_sa_mom'], axis = 1).reset_index().rename(columns= {'index':'date'})
+
+m_agg_sa['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in m_agg_sa['date']]
+
+
 credits = pd.read_excel(path + '//Баланс кредитных организаций.xlsx', engine='openpyxl').rename(columns={'Баланс кредитных организаций, млн руб.*':'name'})\
     .set_index('name').rename_axis(None, axis=0)
 credits_hh = credits.loc[[
@@ -143,7 +152,9 @@ monthly_data = cbrate_and_inflation.merge(dollar_m, how = 'outer', on = 'date')\
                             .merge(zcyc_m, how = 'outer', on = 'date')\
                                 .merge(inf_us, how = 'outer', on = 'date')\
                                     .merge(igrea, how = "outer", on = 'date')\
-                                        .merge(ipc, how = "outer", on = 'date').sort_values('date')
+                                        .merge(ipc, how = "outer", on = 'date')\
+                                            .merge(ruonia_m, how = "outer", on = 'date')\
+                                                .merge(m_agg_sa, how = "outer", on = 'date').sort_values('date')
 
 daily_data = zcyc.merge(ruonia, how = 'outer', on = 'date')\
     .merge(roisfix, how = 'outer', on = 'date')\
@@ -167,6 +178,8 @@ monthly_data.loc[monthly_data['rc_c'].notna(), 'rc_c'] = [np.prod(cpi_array[:i+1
 monthly_data['real_dollar'] = monthly_data['dollar_m']*monthly_data['inf_us_cum']/monthly_data['rcwos_c']
 
 monthly_data['real_rate'] = ((monthly_data['key_rate']/110+1)/(monthly_data['infl']/100+1)*100-100)
+monthly_data['real_ruonia'] = ((monthly_data['ruonia']/110+1)/(monthly_data['infl']/100+1)*100-100)
+
 
 monthly_data['log_credits_hh'] = np.log(monthly_data['credits_hh']/monthly_data['rc_c'])
 
