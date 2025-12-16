@@ -177,8 +177,8 @@ monthly_data.loc[monthly_data['rc_c'].notna(), 'rc_c'] = [np.prod(cpi_array[:i+1
 
 monthly_data['real_dollar'] = monthly_data['dollar_m']*monthly_data['inf_us_cum']/monthly_data['rcwos_c']
 
-monthly_data['real_rate'] = ((monthly_data['key_rate']/110+1)/(monthly_data['infl']/100+1)*100-100)
-monthly_data['real_ruonia'] = ((monthly_data['ruonia']/110+1)/(monthly_data['infl']/100+1)*100-100)
+monthly_data['real_rate'] = ((monthly_data['key_rate']/100+1)/(monthly_data['infl']/100+1)*100-100)
+monthly_data['real_ruonia'] = ((monthly_data['ruonia']/100+1)/(monthly_data['infl']/100+1)*100-100)
 
 
 monthly_data['log_credits_hh'] = np.log(monthly_data['credits_hh']/monthly_data['rc_c'])
