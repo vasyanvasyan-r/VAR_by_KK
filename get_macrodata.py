@@ -20,7 +20,7 @@ path = BASE_DIR + '\\data'
 cbrate_and_inflation = pd.read_excel(path + '//Инфляция и ключевая ставка Банка России.xlsx', engine='openpyxl').set_axis(['date', 'key_rate', 'infl', 'target'], axis = 1)
 cbrate_and_inflation['date'] = [i.split('.')[0] + '.' + i.split('.')[1] + '0' if  i.split('.')[1] == '202' else i for i in cbrate_and_inflation['date'].astype(str)]
 cbrate_and_inflation['date'] = [dt.strptime(i, '%m.%Y') for i in cbrate_and_inflation['date'].astype(str)]
-cbrate_and_inflation['date'] = cbrate_and_inflation['date'].dt.strftime('%Y-%m')
+cbrate_and_inflation['date'] = cbrate_and_inflation['date'].dt.strftime('%Y-%m') # type: ignore
 
 exchange_rate_data = pd.read_excel(path + '//exchange_rate.xlsx', engine='openpyxl').rename(columns={'Unnamed: 0':'name'}).set_index('name').rename_axis(None, axis=0)
 
@@ -43,7 +43,7 @@ dollar_m = exchange_rate_data.iloc[[
     0, 1, exchange_rate_data.index.to_list().index('Средний номинальный курс доллара США к рублю за период')
 ]].set_axis(['year', 'month', 'dollar_m'], axis = 0).T
 dollar_m['date'] = [dt.strptime('-'.join([str(y), ru_months_r[m]]), "%Y-%m") for y, m in zip(dollar_m['year'], dollar_m['month'])]
-dollar_m['date'] = dollar_m['date'].dt.strftime('%Y-%m')
+dollar_m['date'] = dollar_m['date'].dt.strftime('%Y-%m') # type: ignore
 dollar_m = dollar_m.drop(['month', 'year'], axis = 1).reset_index(drop = True)
 
 
@@ -126,21 +126,25 @@ zcyc.iloc[:, 1:] = zcyc.iloc[:, 1:].replace(',', '.', regex=True).astype(float)
 
 zcyc_m = zcyc.copy(deep=True)
 
-zcyc_m['date'] = zcyc_m['date'].dt.strftime('%Y-%m')
+zcyc_m['date'] = zcyc_m['date'].dt.strftime('%Y-%m') # type: ignore
 zcyc_m = zcyc_m.groupby('date').mean().reset_index(drop=False)
 
 inf_us = pd.read_excel(path + '//us_infl.xlsx', sheet_name='Monthly', engine='openpyxl')
 inf_us = inf_us.rename(columns= {'observation_date':'date', 'MEDCPIM158SFRBCLE':'inf_us'}).copy(deep = True)
-inf_us['date'] = inf_us['date'].dt.strftime("%Y-%m")
+inf_us['date'] = inf_us['date'].dt.strftime("%Y-%m") # type: ignore
 inf_us['inf_us'] = inf_us['inf_us']/1200+1
 inf_us['inf_us_cum'] = [np.prod(inf_us['inf_us'].iloc[:i+1].to_numpy()) for i in range(inf_us.shape[0])]
 
 igrea = pd.read_excel(path + f'\\igrea.xlsx', engine='openpyxl').set_axis(['date', 'igrea'], axis = 1)
-igrea['date'] = igrea['date'].dt.strftime('%Y-%m')
+igrea['date'] = igrea['date'].dt.strftime('%Y-%m') # type: ignore
 
 ipc = pd.read_excel(path + f'\\indicators_cpd.xlsx', engine='openpyxl')
 ipc = ipc.T.iloc[1:, [0, 52, 53]].reset_index(drop=False).set_axis(['date', 'all_items', 'ru_cpi', 'ru_cpi_wo_servises'], axis = 1)
-ipc['date'] = ipc['date'].dt.strftime("%Y-%m")
+ipc['date'] = ipc['date'].dt.strftime("%Y-%m") # type: ignore
+
+govspend = pd.read_excel(path + f'\\govspending.xlsx', sheet_name='Сезонно скорректированные', engine='openpyxl')
+govspend['date'] = govspend['date'].dt.strftime("%Y-%m") # type: ignore
+govspend = govspend.rename(columns = {'Доля прироста исполененого к плану':'govspend'}).iloc[:, :2]
 
 monthly_data = cbrate_and_inflation.merge(dollar_m, how = 'outer', on = 'date')\
     .merge(m_agg, how = 'outer', on = 'date')\
@@ -154,7 +158,9 @@ monthly_data = cbrate_and_inflation.merge(dollar_m, how = 'outer', on = 'date')\
                                     .merge(igrea, how = "outer", on = 'date')\
                                         .merge(ipc, how = "outer", on = 'date')\
                                             .merge(ruonia_m, how = "outer", on = 'date')\
-                                                .merge(m_agg_sa, how = "outer", on = 'date').sort_values('date')
+                                                .merge(m_agg_sa, how = "outer", on = 'date')\
+                                                    .merge(govspend, how = "outer", on = 'date')\
+                                                        .sort_values('date')
 
 daily_data = zcyc.merge(ruonia, how = 'outer', on = 'date')\
     .merge(roisfix, how = 'outer', on = 'date')\
