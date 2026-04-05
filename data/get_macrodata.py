@@ -8,24 +8,12 @@ from datetime import timedelta as td
 import warnings
 warnings.filterwarnings("ignore", message="Workbook contains no default style.*")
 
-
-# Получить путь к текущему .ipynb-файлу
-BASE_DIR = os.path.dirname(__file__)
-
-
-
-# Проверка
-print("Текущая рабочая директория:", os.getcwd(), '\nОттуда буду брать данные, там должна быть папка data, а в ней данные по годам')
-
-path = BASE_DIR
-
-
-cbrate_and_inflation = pd.read_excel(path + '//Инфляция и ключевая ставка Банка России.xlsx', engine='openpyxl').set_axis(['date', 'key_rate', 'infl', 'target'], axis = 1)
+cbrate_and_inflation = pd.read_excel('data/Инфляция и ключевая ставка Банка России.xlsx', engine='openpyxl').set_axis(['date', 'key_rate', 'infl', 'target'], axis = 1)
 cbrate_and_inflation['date'] = [i.split('.')[0] + '.' + i.split('.')[1] + '0' if  i.split('.')[1] == '202' else i for i in cbrate_and_inflation['date'].astype(str)]
 cbrate_and_inflation['date'] = [dt.strptime(i, '%m.%Y') for i in cbrate_and_inflation['date'].astype(str)]
 cbrate_and_inflation['date'] = cbrate_and_inflation['date'].dt.strftime('%Y-%m') # type: ignore
 
-exchange_rate_data = pd.read_excel(path + '//exchange_rate.xlsx', engine='openpyxl').rename(columns={'Unnamed: 0':'name'}).set_index('name').rename_axis(None, axis=0)
+exchange_rate_data = pd.read_excel('data/exchange_rate.xlsx', engine='openpyxl').rename(columns={'Unnamed: 0':'name'}).set_index('name').rename_axis(None, axis=0)
 
 ru_months = {
     '01':'Янв',
@@ -42,13 +30,13 @@ ru_months = {
     '12':'Дек',
 }
 ru_months_r = {v:k for k, v in ru_months.items()}
-df = pd.read_excel(path + '//usdrub_daily.xlsx', engine='openpyxl')
+df = pd.read_excel('data/usdrub_daily.xlsx', engine='openpyxl')
 df['date'] = [dt.strftime(i, "%Y-%m") for i in df['data']]
 usdrub_m = df.loc[:, ['date', 'curs']].groupby(['date']).agg({'curs' : 'mean'}).copy(deep=True).reset_index().rename(columns = {'curs': 'dollar_m'})
 usdrub_d = df.loc[:, ['date', 'curs']].copy(deep=True)
 
 
-monetary_agg = pd.read_excel(path + '//monetary_agg.xlsx', engine='openpyxl').rename(columns={'Денежные агрегаты*, млрд руб.':'name'})\
+monetary_agg = pd.read_excel('data/monetary_agg.xlsx', engine='openpyxl').rename(columns={'Денежные агрегаты*, млрд руб.':'name'})\
     .set_index('name').rename_axis(None, axis=0)
 m_agg = monetary_agg.loc[[
     'Денежный агрегат М0', 'Денежный агрегат М1', 'Денежный агрегат М2'
@@ -57,7 +45,7 @@ m_agg = monetary_agg.loc[[
 m_agg['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in m_agg['date']]
 
 
-monetary_agg = pd.read_excel(path + f'//monetary_agg_SA.xlsx', engine='openpyxl').iloc[2:-5, :].rename(columns={'Денежные агрегаты':'name'}).set_index('name').rename_axis(None, axis=0)
+monetary_agg = pd.read_excel('data//monetary_agg_SA.xlsx', engine='openpyxl').iloc[2:-5, :].rename(columns={'Денежные агрегаты':'name'}).set_index('name').rename_axis(None, axis=0)
 m_agg_sa = monetary_agg.loc[:, [
     'Unnamed: 27', 'Unnamed: 24', 'Unnamed: 21'
 ]].set_axis(['m2x_sa_mom', 'm2_sa_mom', 'm1_sa_mom'], axis = 1).reset_index().rename(columns= {'index':'date'})
@@ -66,23 +54,23 @@ m_agg_sa['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "
 
 
 
-pmi = pd.read_excel(path + '//Бюллетень О чем говорят тренды.xlsx', sheet_name=9, engine='openpyxl').iloc[3:,:3]\
+pmi = pd.read_excel('data/Бюллетень О чем говорят тренды.xlsx', sheet_name=9, engine='openpyxl').iloc[3:,:3]\
     .set_axis(['date', 'PMI_manufacturing', 'PMI_service'], axis = 1)\
             .reset_index(drop=True)
 pmi['date'] = [pd.Timestamp(i) for i in pmi['date']]
 pmi['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in pmi['date']]
 
-ipi = pd.read_excel(path + '//ИПП.xlsx').iloc[:2, 1:].T.reset_index(drop = True).set_axis(['date', 'ipi'], axis=1)
+ipi = pd.read_excel('data/ИПП.xlsx').iloc[:2, 1:].T.reset_index(drop = True).set_axis(['date', 'ipi'], axis=1)
 ipi['date'] = [i.strftime("%Y-%m") for i in ipi['date']]
 
-ruonia = pd.read_excel(path + '//ruonia.xlsx', engine='openpyxl').rename(columns = {'DT':'date', 'ruo':'ruonia'}).loc[:, ['date', 'ruonia']]
+ruonia = pd.read_excel('data/ruonia.xlsx', engine='openpyxl').rename(columns = {'DT':'date', 'ruo':'ruonia'}).loc[:, ['date', 'ruonia']]
 ruonia['date'] = [pd.Timestamp(i) for i in ruonia['date']]
 ruonia_m = ruonia.copy(deep = True)
 ruonia_m['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in ruonia_m['date']]
 ruonia_m = ruonia_m.groupby('date').mean().reset_index(drop=False)
 
 
-inf_exp_all_data = pd.read_excel(path + '//Наблюдаемая_и_ожидаемая_инфляция.xlsx', engine='openpyxl', sheet_name = 'Данные за все годы')\
+inf_exp_all_data = pd.read_excel('data/Наблюдаемая_и_ожидаемая_инфляция.xlsx', engine='openpyxl', sheet_name = 'Данные за все годы')\
                     .rename(columns={'Данные в таблице приводятся в % от всех опрошенных, если не указано иное.':'name'}).set_index('name').rename_axis(None, axis=0)
 
 inf_exp_all_data = inf_exp_all_data.rename(index = {inf_exp_all_data.index.to_list()[0]:'date'})
@@ -92,36 +80,40 @@ inf_exp = inf_exp_all_data.loc[[
     'ожидаемая инфляция среди тех, кто не имеет сбережений (в %)',
     'ожидаемая инфляция (в %)',
     'наблюдаемая инфляция среди тех, кто имеет сбережения (в %)',
-    'наблюдаемая инфляция среди тех, кто не имеет сбережений (в %)'
+    'наблюдаемая инфляция среди тех, кто не имеет сбережений (в %)',
+    'есть',
+    'нет'
 ]]
-inf_exp = inf_exp.iloc[[0,4, 5, 6, 7, 8]].T.reset_index(drop = True).set_axis(['date', 'pi_e_ws', 'pi_e_wos', 'pi_e', 'pi_hat_ws', 'pi_hat_wos'], axis = 1)
-inf_exp['pi_e'] = inf_exp['pi_e'].astype(float)
+inf_exp = inf_exp.iloc[[0,4, 5, 6, 7, 8, 9]].T.reset_index(drop = True).set_axis(['date', 'pi_e_ws', 'pi_e_wos', 'pi_e', 'pi_hat_ws', 'pi_hat_wos', 's1'], axis = 1)
+inf_exp['s0'] = inf_exp_all_data.loc['нет'].iloc[0].astype(float).reset_index(drop=True)
+inf_exp[['pi_e', 's1']] = inf_exp[['pi_e', 's1']].astype(float)
 inf_exp['date'] = [pd.Timestamp(i) for i in inf_exp['date']]
 inf_exp['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in inf_exp['date']]
 
-roisfix = pd.read_excel(path + '//futures_ruonia.xlsx', engine='openpyxl').set_axis(['date', 'smth', 'ruonia_1m', 'ruonia_3m', 'ruonia_6m'], axis = 1).drop(['smth', 'ruonia_1m'], axis = 1)
+roisfix = pd.read_excel('data/futures_ruonia.xlsx', engine='openpyxl').set_axis(['date', 'smth', 'ruonia_1m', 'ruonia_3m', 'ruonia_6m'], axis = 1).drop(['smth', 'ruonia_1m'], axis = 1)
 roisfix['date'] = [pd.Timestamp(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d")) for i in roisfix['date']]
 roisfix_m = roisfix.copy(deep = True)
 roisfix_m['date'] = [dt.strftime(i, "%Y-%m") for i in roisfix_m['date']]
 roisfix_m = roisfix_m.groupby('date').mean().reset_index(drop=False)
 
 
-brent = pd.read_csv(path + '//brent.csv').iloc[:, :2].set_axis(['date', 'price_brent'], axis = 1).replace({',': '.'}, regex=True)
+brent = pd.read_csv('data/brent.csv').iloc[:, :2].set_axis(['date', 'price_brent'], axis = 1).replace({',': '.'}, regex=True)
 brent['price_brent'] = brent['price_brent'].astype(float)
-brent['date'] = [pd.Timestamp(i) for i in brent['date']]
+brent['price_brent'] = brent['price_brent'].astype(float)
+brent['date'] = [dt.strptime(i, '%d.%m.%Y') for i in brent['date']]
 brent_m = brent.copy(deep = True)
-brent_m['date'] = [dt.strftime(dt.strptime(str(i).split(" ")[0], "%Y-%m-%d"), "%Y-%m") for i in brent_m['date']]
+brent_m['date'] = [dt.strftime(i, "%Y-%m") for i in brent_m['date']]
 brent_m = brent_m.groupby('date').mean().reset_index(drop=False)
 
-cd = pd.read_excel(path + '//balance_odc.xlsx').set_index('Баланс кредитных организаций, млн руб.*')\
+cd = pd.read_excel('data/balance_odc.xlsx').set_index('Баланс кредитных организаций, млн руб.*')\
     .rename_axis(None, axis = 0).loc[['Кредиты и займы, предоставленные  населению (домашним хозяйствам)', 'Депозиты населения  (домашних хозяйств)']].T\
     .reset_index().set_axis(['date', 'credits_hh', 'deposits_hh'], axis = 1)
 cd['date'] = [dt.strptime(str(i), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m') for i in cd['date']]
 
-zcyc = pd.read_csv(path + f'//zcyc_1.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_1'], axis = 1).iloc[1:, :]
-temp_df = pd.read_csv(path + f'//zcyc_05.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_05'], axis = 1).iloc[1:, [0,2]]
+zcyc = pd.read_csv('data//zcyc_1.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_1'], axis = 1).iloc[1:, :]
+temp_df = pd.read_csv('data//zcyc_05.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_05'], axis = 1).iloc[1:, [0,2]]
 zcyc = zcyc.merge(temp_df, how = 'inner', on = 'date')
-temp_df = pd.read_csv(path + f'//zcyc_025.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_025'], axis = 1).iloc[1:, [0,2]]
+temp_df = pd.read_csv('data/zcyc_025.csv', sep = ';').reset_index().set_axis(['date', 'time', f'rate_025'], axis = 1).iloc[1:, [0,2]]
 zcyc = zcyc.merge(temp_df, how = 'inner', on = 'date').drop(columns=['time'])
 zcyc['date'] = [pd.Timestamp(dt.strptime(str(i).split(" ")[0], "%d.%m.%Y")) for i in zcyc['date']]
 zcyc.iloc[:, 1:] = zcyc.iloc[:, 1:].replace({',': '.'}, regex=True)
@@ -133,22 +125,22 @@ zcyc_m = zcyc.copy(deep=True)
 zcyc_m['date'] = zcyc_m['date'].dt.strftime('%Y-%m') # type: ignore
 zcyc_m = zcyc_m.groupby('date').mean().reset_index(drop=False)
 
-inf_us = pd.read_csv(path + '//us_infl.csv').set_axis(['date', 'inf_us_cum'], axis = 1)
+inf_us = pd.read_csv('data/us_infl.csv').set_axis(['date', 'inf_us_cum'], axis = 1)
 inf_us['date'] = [dt.strptime(i, '%Y-%m-%d').strftime("%Y-%m") for i in inf_us['date']]
 inf_us.iloc[945,1] = inf_us.iloc[944,1]
 
-igrea = pd.read_excel(path + f'\\igrea.xlsx', engine='openpyxl').set_axis(['date', 'igrea'], axis = 1)
+igrea = pd.read_excel('data/igrea.xlsx', engine='openpyxl').set_axis(['date', 'igrea'], axis = 1)
 igrea['date'] = igrea['date'].dt.strftime('%Y-%m') # type: ignore
 
-ipc = pd.read_excel(path + f'\\cpi.xlsx', engine='openpyxl')
+ipc = pd.read_excel('data/cpi.xlsx', engine='openpyxl')
 ipc = ipc.T.iloc[1:, [0, 52, 53]].reset_index(drop=False).set_axis(['date', 'all_items', 'ru_cpi', 'ru_cpi_wo_servises'], axis = 1)
 ipc['date'] = ipc['date'].dt.strftime("%Y-%m") # type: ignore
 
-govspend = pd.read_excel(path + f'\\govspending.xlsx', sheet_name='Сезонно скорректированные2', engine='openpyxl')
+govspend = pd.read_excel('data/govspending.xlsx', sheet_name='Сезонно скорректированные2', engine='openpyxl')
 govspend['date'] = govspend['date'].dt.strftime("%Y-%m") # type: ignore
 govspend = govspend.rename(columns = {'Доля прироста исполененого к плану':'govspend'}).iloc[:, :2]
 
-cons = pd.read_excel(path + f'\\pokupki_doverie.xlsx').iloc[:4, 30:].reset_index(drop = True).T.reset_index(drop = True).set_axis(['date', 'pos', 'neg', 'dna'], axis = 1)
+cons = pd.read_excel('data/pokupki_doverie.xlsx').iloc[:4, 30:].reset_index(drop = True).T.reset_index(drop = True).set_axis(['date', 'pos', 'neg', 'dna'], axis = 1)
 
 # Словарь русских месяцев
 RU_MONTHS = {
@@ -196,7 +188,7 @@ cons['date'] = cons['date'].apply(parse_mixed_date).dt.strftime('%Y-%m') # type:
 cons['cons'] = cons['pos'] + 0.5*cons['dna']
 cons = cons.loc[:, ['date', 'cons']]
 
-wage = pd.read_csv(path + f'\\izmenenie-obema-fot.csv', sep = ';').query("category == 'Все отрасли'")
+wage = pd.read_csv('data/izmenenie-obema-fot.csv', sep = ';').query("category == 'Все отрасли'")
 wage['date'] = [dt.strptime(i, '%Y-%m-%d').strftime("%Y-%m") for i in wage['date']]
 wage['wage'] = np.log(wage['value'])
 wage = wage.loc[:, ['date', 'wage']]
@@ -252,4 +244,4 @@ monthly_data['log_deposits_hh'] = np.log(monthly_data['deposits_hh']/monthly_dat
 
 monthly_data.index = [dt.strptime(i, '%Y-%m') for i in monthly_data.index.to_list()] # type: ignore
 
-monthly_data.to_pickle('monthly_data.pkl')
+monthly_data.to_pickle('data/monthly_data.pkl')
